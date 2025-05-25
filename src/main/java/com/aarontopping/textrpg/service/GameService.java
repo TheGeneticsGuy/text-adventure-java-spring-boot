@@ -170,35 +170,42 @@ public class GameService {
         storyScenes.put(ANOTHER_ADVENTURE_ID, anotherAdventure);
     }
 
-    @Transactional
     public GameSession startGame(String playerName) {
-        Player player = playerRepository.findByName(playerName).orElseGet(() -> {
-            Player newPlayer = new Player(playerName);
-            // Add common skills to all new players
-            newPlayer.addSkill(SKILL_PUNCH);
-            return playerRepository.save(newPlayer);
-        });
+        Optional<Player> existingPlayerOpt = playerRepository.findByName(playerName);
+        Player playerEntity;
 
-        // If player already exists but has no class
-        if (player.getCharacterClass() == null) {
-            player.getKnownSkills().clear();
-            player.addSkill(SKILL_PUNCH);
-        }
+        if (existingPlayerOpt.isPresent()) {
+            playerEntity = existingPlayerOpt.get();
 
-        Optional<GameSession> existingSession = gameSessionRepository.findByPlayerIdAndGameOver(player.getId(), false);
-        if (existingSession.isPresent()) {
-            GameSession session = existingSession.get();
-            // If game is over, or if player has no class yet (meaning they are at weapon
-            // choice or before)
-            if (session.isGameOver() || player.getCharacterClass() == null) {
-                // Force new session if player needs to pick class again or game was over
-                GameSession newGameSession = new GameSession(player, START_SCENE_ID);
-                return gameSessionRepository.save(newGameSession);
+            // Player exists. Before resetting them, find and delete their old game
+            // sessions.
+            List<GameSession> oldSessions = gameSessionRepository.findAllByPlayerId(playerEntity.getId());// NEEDED
+            if (!oldSessions.isEmpty()) {
+                gameSessionRepository.deleteAll(oldSessions);
+                gameSessionRepository.flush(); // Ensure deletions are processed
             }
-            return session; // Return to existing game
+
+            // Reset player state for a new game.
+            playerEntity.setCharacterClass(null);
+            playerEntity.setEquippedWeapon(null);
+
+            List<Skill> newSkillList = new ArrayList<>();
+            if (this.SKILL_PUNCH != null) {
+                newSkillList.add(this.SKILL_PUNCH);
+            }
+            playerEntity.setKnownSkills(newSkillList);
+            playerEntity.setHealth(100);
+
+            playerEntity = playerRepository.save(playerEntity);
+        } else {
+            Player newPlayer = new Player(playerName);
+            if (this.SKILL_PUNCH != null) {
+                newPlayer.addSkill(this.SKILL_PUNCH);
+            }
+            playerEntity = playerRepository.save(newPlayer);
         }
 
-        GameSession newGameSession = new GameSession(player, START_SCENE_ID);
+        GameSession newGameSession = new GameSession(playerEntity, START_SCENE_ID);
         return gameSessionRepository.save(newGameSession);
     }
 

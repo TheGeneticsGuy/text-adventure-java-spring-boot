@@ -12,15 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerInfoSection = document.getElementById('player-info-section');
 
 
-    const API_BASE_URL = 'http://localhost:8080/api/game'; // Your Spring Boot API URL
+    const API_BASE_URL = 'http://localhost:8080/api/game'; // Spring Boot URL eventually
     let currentSessionId = null;
     let currentPlayerName = '';
 
-    playerInfoSection.style.display = 'none'; // Hide player info initially
+    playerInfoSection.style.display = 'none'; // Hiding player info initially
 
     // Function to update the game display
     function updateDisplay(gameState) {
-        console.log("Updating display with gameState:", JSON.stringify(gameState, null, 2)); // Log the whole state
         sceneDescriptionElement.textContent = gameState.description;
         choicesSectionElement.innerHTML = ''; // Clear old choices
 
@@ -33,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             gameState.choices.forEach(choice => {
                 const button = document.createElement('button');
+                button.setAttribute('type', 'button');
                 button.textContent = choice.text;
-                button.classList.add('choice-button'); // For styling
+                button.classList.add('choice-button');
                 button.addEventListener('click', () => makeChoice(choice.id));
                 choicesSectionElement.appendChild(button);
             });
@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to make a choice
     async function makeChoice(choiceId) {
-        console.log("Making choice:", choiceId, "for session:", currentSessionId);
         if (!currentSessionId) {
             console.error('No active game session!');
             return;
@@ -116,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const gameState = await response.json();
-            console.log("Received gameState after choice:", JSON.stringify(gameState, null, 2));
             updateDisplay(gameState);
         } catch (error) {
             console.error('Error making choice:', error);

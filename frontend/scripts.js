@@ -18,31 +18,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     playerInfoSection.style.display = 'none'; // Hiding player info initially
 
-    // Function to update the game display
+    // Function to update the game display on each selection like a SPA
     function updateDisplay(gameState) {
-        sceneDescriptionElement.textContent = gameState.description;
-        choicesSectionElement.innerHTML = ''; // Clear old choices
+
+        choicesSectionElement.innerHTML = '';
+        const storySectionElement = document.getElementById('story-section');
 
         if (gameState.gameOver) {
+            sceneDescriptionElement.textContent = '';
+            storySectionElement.style.display = 'none';
+
             inputSectionElement.style.display = 'none';
             choicesSectionElement.style.display = 'none';
-            outcomeMessageElement.textContent = gameState.outcomeMessage || gameState.description;
+
+            // Only use outcomeMessage for the game over section
+            outcomeMessageElement.textContent = gameState.outcomeMessage;
+
             gameOverSectionElement.style.display = 'block';
             playerInfoSection.style.display = 'none';
         } else {
+            storySectionElement.style.display = 'block'; // Show the main story section
+            sceneDescriptionElement.textContent = gameState.description;
+
             gameState.choices.forEach(choice => {
                 const button = document.createElement('button');
                 button.setAttribute('type', 'button');
                 button.textContent = choice.text;
                 button.classList.add('choice-button');
-                button.addEventListener('click', () => makeChoice(choice.id));
+                button.addEventListener('click', (event) => {
+                    makeChoice(choice.id);
+                });
                 choicesSectionElement.appendChild(button);
             });
             choicesSectionElement.style.display = 'block';
             gameOverSectionElement.style.display = 'none';
-            inputSectionElement.style.display = 'none'; // Hide name input after game starts
+            inputSectionElement.style.display = 'none';
 
-            // Update player info display
             if (gameState.playerName) {
                 playerNameDisplay.textContent = gameState.playerName;
                 playerClassDisplay.textContent = gameState.playerClass || 'Undetermined';
@@ -50,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     // Function to start the game
     async function startGame() {
         currentPlayerName = playerNameInput.value.trim();

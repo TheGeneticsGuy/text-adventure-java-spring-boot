@@ -5,6 +5,7 @@ This project represents an exploration into building a backend-driven web applic
 The software is a "backend-driven" RPG system as a text-based RPG. Players interact with the game world through API calls, allowing for character creation, story progression, exploration, and even combat. While it is fairly limited in its current form, the infrastructure is in place to now take the program really to the next level. The narrative is a multi-branching storyline about a BYU student.
 
 [CLICK HERE to Experience the Online Text Adventure RPG Yourself!](https://byu-student-java-text-rpg-ui.onrender.com/)
+
 (Please be aware, Render can take up to 50 seconds to spin up after hitting the "Start Game" button - Please be patient)
 
 [Software Demo Video](https://youtu.be/cjd-2J_Zaag)

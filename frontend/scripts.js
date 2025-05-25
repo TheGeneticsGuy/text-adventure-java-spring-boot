@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerInfoSection = document.getElementById('player-info-section');
 
 
-    const API_BASE_URL = 'http://text-adventure-java-spring-boot.onrender.com/api/game';
+    const API_BASE_URL = 'http://byu-student-java-text-rpg.onrender.com/api/game';
     let currentSessionId = null;
     let currentPlayerName = '';
 

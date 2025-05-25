@@ -7,7 +7,7 @@ The software is a "backend-driven" RPG system as a text-based RPG. Players inter
 [CLICK HERE to Experience the Online Text Adventure RPG Yourself!](https://byu-student-java-text-rpg-ui.onrender.com/)
 (Please be aware, Render can take up to 50 seconds to spin up after hitting the "Start Game" button - Please be patient)
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/cjd-2J_Zaag)
 
 # Development Environment
 

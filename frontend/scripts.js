@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerInfoSection = document.getElementById('player-info-section');
 
 
-    const API_BASE_URL = 'http://localhost:8080/api/game'; // Spring Boot URL eventually
+    const API_BASE_URL = 'http://text-adventure-java-spring-boot.onrender.com/api/game';
     let currentSessionId = null;
     let currentPlayerName = '';
 

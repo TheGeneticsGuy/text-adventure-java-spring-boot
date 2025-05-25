@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to update the game display
     function updateDisplay(gameState) {
+        console.log("Updating display with gameState:", JSON.stringify(gameState, null, 2)); // Log the whole state
         sceneDescriptionElement.textContent = gameState.description;
         choicesSectionElement.innerHTML = ''; // Clear old choices
 
@@ -85,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to make a choice
     async function makeChoice(choiceId) {
+        console.log("Making choice:", choiceId, "for session:", currentSessionId);
         if (!currentSessionId) {
             console.error('No active game session!');
             return;
@@ -114,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const gameState = await response.json();
+            console.log("Received gameState after choice:", JSON.stringify(gameState, null, 2));
             updateDisplay(gameState);
         } catch (error) {
             console.error('Error making choice:', error);

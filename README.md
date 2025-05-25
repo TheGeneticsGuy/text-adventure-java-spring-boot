@@ -25,6 +25,7 @@
 - [Building a Java app with Spring Boot - Official Guide](https://spring.io/guides/gs/spring-boot)
 - [Java Spring Tutorial - REST](https://medium.com/@alexandre.therrien3/java-spring-tutorial-the-only-tutorial-you-will-need-to-get-started-vs-code-13413e661db5) - Full setup of REST API using Java Spring. Critical documentation to integrate web functionality using REST APIs GET, POST, etc for web functionality
 - [Creating a text adventure game in Java](https://www.javacoffeebreak.com/text-adventure/) - While old, creating the overall structure of all my classes this was absolutely critical to follow some guidelines on how to use.
+- [Docker Hub](https://hub.docker.com) - Necessary to host my docket image which Render deploys from.
 
 # Future Work
 

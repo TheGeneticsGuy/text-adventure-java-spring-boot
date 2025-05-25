@@ -29,8 +29,9 @@ record GameStateResponse(
 
 @RestController
 @RequestMapping("/api/game")
-@CrossOrigin(origins = "*") // Will eventually restrict to actual front end domain
-// @CrossOrigin(origins = "http://your-frontend-domain.com")
+// @CrossOrigin(origins = "*") // Will eventually restrict to actual front end
+// domain
+@CrossOrigin(origins = "https://byu-student-java-text-rpg-ui.onrender.com")
 public class GameController {
 
     private final GameService gameService;

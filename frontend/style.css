@@ -94,3 +94,33 @@ h1 {
     padding-top: 20px;
     border-top: 1px solid #008800;
 }
+
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 255, 0, 0.3);
+    border-radius: 50%;
+    border-top-color: #00ff00;
+    animation: spin 1s ease-in-out infinite;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+#exitGameButton {
+    background-color: #550000;
+    /* Dark red */
+    color: #ffdddd;
+    border: 1px solid #880000;
+    /* Add other styles */
+}
+
+#exitGameButton:hover {
+    background-color: #770000;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

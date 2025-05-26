@@ -15,6 +15,7 @@
 
 <body>
     <div class="game-container">
+
         <h1>BYU Student's Mysterious Adventure</h1>
 
         <div id="player-info-section">
@@ -38,6 +39,13 @@
             <p id="outcomeMessage"></p>
             <button id="restartGameButton">Play Again?</button>
         </div>
+
+        <div id="loading-indicator" style="display:none; text-align: center; margin-top: 20px;">
+            <p>Waiting for server to load. One moment... <span class="spinner"></span></p>
+        </div>
+
+    </div>
+    <div id="game-controls" style="display:none; margin-top: 15px;"> <button id="exitGameButton">Exit Game</button>
     </div>
 
 </body>

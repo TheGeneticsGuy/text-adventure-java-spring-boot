@@ -18,7 +18,7 @@ public class GameService {
     private final GameSessionRepository gameSessionRepository;
     private final SkillRepository skillRepository;
     private final CharacterClassRepository characterClassRepository;
-    private final WeaponRepository weaponRepository;
+    private final WeaponTemplateRepository weaponTemplateRepository;
 
     private final Map<String, Scene> storyScenes = new HashMap<>();
 
@@ -32,14 +32,17 @@ public class GameService {
     private CharacterClass CLASS_ARCHER;
 
     // Weapons
-    private Weapon WEAPON_SWORD;
-    private Weapon WEAPON_BOW;
+    private WeaponTemplate WEAPON_SWORD;
+    private WeaponTemplate WEAPON_BOW;
 
     // Scene IDs
+    // Initial Start - will eventually be varied
     public static final String START_SCENE_ID = "START";
     public static final String CLICK_LINK_CHOICE_SCENE_ID = "CLICK_LINK_CHOICE";
     public static final String TELEPORT_SCENE_ID = "TELEPORT_SCENE";
-    public static final String CHOOSE_WEAPON_SCENE_ID = "CHOOSE_WEAPON"; // New scene
+    public static final String CHOOSE_WEAPON_SCENE_ID = "CHOOSE_WEAPON";
+    public static final String CHOOSE_WARRIOR_CLASS_ID = "CHOOSE_WARRIOR_CLASS";
+    public static final String CHOOSE_ARCHER_CLASS_ID = "CHOOSE_ARCHER_CLASS";
     public static final String FOREST_ENCOUNTER_ID = "FOREST_ENCOUNTER";
     public static final String END_COLLEGE_LIFE_ID = "END_COLLEGE_LIFE";
     public static final String FIND_PORTAL_HOME_ID = "FIND_PORTAL_HOME";
@@ -50,12 +53,12 @@ public class GameService {
     @Autowired
     public GameService(PlayerRepository playerRepository, GameSessionRepository gameSessionRepository,
             SkillRepository skillRepository, CharacterClassRepository characterClassRepository,
-            WeaponRepository weaponRepository) {
+            WeaponTemplateRepository weaponTemplateRepository) {
         this.playerRepository = playerRepository;
         this.gameSessionRepository = gameSessionRepository;
         this.skillRepository = skillRepository;
         this.characterClassRepository = characterClassRepository;
-        this.weaponRepository = weaponRepository;
+        this.weaponTemplateRepository = weaponTemplateRepository;
     }
 
     @PostConstruct
@@ -89,10 +92,10 @@ public class GameService {
                 });
 
         // --- Initialize Weapons ---
-        WEAPON_SWORD = weaponRepository.findByName("Basic Sword")
-                .orElseGet(() -> weaponRepository.save(new Weapon("Basic Sword", "SWORD", 3)));
-        WEAPON_BOW = weaponRepository.findByName("Basic Bow")
-                .orElseGet(() -> weaponRepository.save(new Weapon("Basic Bow", "BOW", 3)));
+        WEAPON_SWORD = weaponTemplateRepository.findByName("Basic Sword")
+                .orElseGet(() -> weaponTemplateRepository.save(new WeaponTemplate("Basic Sword", "SWORD", 3)));
+        WEAPON_BOW = weaponTemplateRepository.findByName("Basic Bow")
+                .orElseGet(() -> weaponTemplateRepository.save(new WeaponTemplate("Basic Bow", "BOW", 3)));
 
         // --- Initialize Story Scenes ---
         initializeStory();
@@ -124,18 +127,35 @@ public class GameService {
         // --- Layer 2: Into the New World & Weapon Choice ---
         Scene teleport = new Scene(TELEPORT_SCENE_ID,
                 "A blinding flash occurs! You feel your body lift from the ground. You feel weightless. In an instant, you land in a dim forest. Where did you go? Are you dreaming!? The air is strange. Before you, on a mossy stone, lie two items: a sturdy-looking sword and a well-crafted bow.");
-        teleport.addChoice(new Choice("SWORD", "Take the Sword.", CHOOSE_WEAPON_SCENE_ID, null, false)); // Choice ID
-        teleport.addChoice(new Choice("BOW", "Take the Bow.", CHOOSE_WEAPON_SCENE_ID, null, false));
+        teleport.addChoice(new Choice("SWORD", "Take the Sword.", CHOOSE_WARRIOR_CLASS_ID, null, false)); // Choice ID
+        teleport.addChoice(new Choice("BOW", "Take the Bow.", CHOOSE_ARCHER_CLASS_ID, null, false));
         storyScenes.put(TELEPORT_SCENE_ID, teleport);
 
-        Scene chooseWeaponOutcome = new Scene(CHOOSE_WEAPON_SCENE_ID,
-                "You've made your choice. You feel a new sense of purpose... and hear a rustling in the bushes nearby.",
+        Scene warriorChosen = new Scene(CHOOSE_WARRIOR_CLASS_ID,
+                "The cold steel of the sword feels strangely familiar in your grasp. It's heavier than you expected, yet balanced. A surge of forgotten strength, of primal instincts, flows through you. In this world, the analytical mind of a coder gives way to something older, something fiercer. Perhaps in another age, your destiny would not have been lines of code, but lines of battle. You are a Warrior."
+                        +
+                        " You feel a new sense of purpose... and hear a rustling in the bushes nearby.",
+                false);
+
+        Scene archerChosen = new Scene(CHOOSE_ARCHER_CLASS_ID,
+                "The polished wood of the bow hums faintly as you pick it up, the string taut and ready. Your fingers instinctively find their place. A sense of keen focus, of distant targets and trajectories, sharpens your mind. The digital precision you honed in computer science translates into an uncanny aim. Maybe the path of logic and algorithms you walked in your old life was but a reflection of this archer's instinct, "
+                        +
+                        " You feel a new sense of purpose... and hear a rustling in the bushes nearby.",
                 false);
 
         // Let's build a generic encounter - only once choice
-        chooseWeaponOutcome
-                .addChoice(new Choice("CONTINUE", "Investigate the rustling.", FOREST_ENCOUNTER_ID, null, false));
-        storyScenes.put(CHOOSE_WEAPON_SCENE_ID, chooseWeaponOutcome);
+        warriorChosen
+                .addChoice(new Choice("CONTINUE", "Acknowledge your new path and investigate the rustling.",
+                        FOREST_ENCOUNTER_ID, null, false));
+        storyScenes.put(CHOOSE_WARRIOR_CLASS_ID, warriorChosen);
+
+        archerChosen
+                .addChoice(new Choice("CONTINUE", "IAcknowledge your new path and investigate the rustling.",
+                        FOREST_ENCOUNTER_ID, null, false));
+        storyScenes.put(CHOOSE_ARCHER_CLASS_ID, archerChosen);
+
+        Scene chooseWeaponTransition = new Scene(CHOOSE_WEAPON_SCENE_ID, "Transitioning...", false); // Placeholder
+        storyScenes.put(CHOOSE_WEAPON_SCENE_ID, chooseWeaponTransition);
 
         // --- Layer 3: First Encounter (will now use skills) ---
         Scene forestEncounter = new Scene(FOREST_ENCOUNTER_ID,
@@ -230,14 +250,14 @@ public class GameService {
         if (session.getCurrentSceneId().equals(TELEPORT_SCENE_ID)) {
             if (choiceId.equals("SWORD")) {
                 player.setCharacterClass(CLASS_WARRIOR);
-                player.setEquippedWeapon(weaponRepository.findByName("Basic Sword").orElse(WEAPON_SWORD));
+                player.setEquippedWeapon(weaponTemplateRepository.findByName("Basic Sword").orElse(WEAPON_SWORD));
                 player.addSkills(CLASS_WARRIOR.getDefaultSkills());
-                nextSceneId = CHOOSE_WEAPON_SCENE_ID;
+                nextSceneId = CHOOSE_WARRIOR_CLASS_ID;
             } else if (choiceId.equals("BOW")) {
                 player.setCharacterClass(CLASS_ARCHER);
-                player.setEquippedWeapon(weaponRepository.findByName("Basic Bow").orElse(WEAPON_BOW));
+                player.setEquippedWeapon(weaponTemplateRepository.findByName("Basic Bow").orElse(WEAPON_BOW));
                 player.addSkills(CLASS_ARCHER.getDefaultSkills());
-                nextSceneId = CHOOSE_WEAPON_SCENE_ID;
+                nextSceneId = CHOOSE_ARCHER_CLASS_ID;
             } else {
                 throw new IllegalArgumentException("Invalid weapon choice.");
             }

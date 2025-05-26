@@ -18,13 +18,13 @@ public class Player {
     private String name;
     private int health;
 
-    @ManyToOne(cascade = { CascadeType.MERGE }) // Player has only 1 character class
+    @ManyToOne // Player has only 1 character class
     @JoinColumn(name = "character_class_id")
     private CharacterClass characterClass;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true) // Player has only 1 equipped weapon
-    @JoinColumn(name = "equipped_weapon_id")
-    private Weapon equippedWeapon;
+    @ManyToOne
+    @JoinColumn(name = "equipped_weapon_template_id")
+    private WeaponTemplate equippedWeapon;
 
     // Player default skills - I won't add to this, but adding so I can scale in
     // future maybe

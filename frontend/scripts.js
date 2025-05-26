@@ -10,9 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNameDisplay = document.getElementById('playerName');
     const playerClassDisplay = document.getElementById('playerClass');
     const playerInfoSection = document.getElementById('player-info-section');
+    const exitGameButton = document.getElementById('exitGameButton');
+    const gameControlsElement = document.getElementById('game-controls');
 
 
-    const API_BASE_URL = 'https://byu-student-java-text-rpg.onrender.com/api/game';
+    let API_BASE_URL;
+    const currentHostname = window.location.hostname;
+    const currentProtocol = window.location.protocol;
+
+    // Check for local development scenarios
+    if (currentProtocol === "file:" || currentHostname === "localhost" || currentHostname === "127.0.0.1") {
+        API_BASE_URL = 'http://localhost:8080/api/game';
+    } else {
+        API_BASE_URL = 'https://byu-student-java-text-rpg.onrender.com/api/game';
+    }
+
     let currentSessionId = null;
     let currentPlayerName = '';
 
@@ -25,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const storySectionElement = document.getElementById('story-section');
 
         if (gameState.gameOver) {
+            if (gameControlsElement) gameControlsElement.style.display = 'none';
+
             sceneDescriptionElement.textContent = '';
             storySectionElement.style.display = 'none';
 
@@ -37,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gameOverSectionElement.style.display = 'block';
             playerInfoSection.style.display = 'none';
         } else {
+            if (gameControlsElement) gameControlsElement.style.display = 'block';
+
             storySectionElement.style.display = 'block'; // Show the main story section
             sceneDescriptionElement.textContent = gameState.description;
 
@@ -61,9 +77,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    const loadingIndicatorElement = document.getElementById('loading-indicator');
+
+    function showLoading() {
+        if (loadingIndicatorElement) loadingIndicatorElement.style.display = 'block';
+    }
+
+    function hideLoading() {
+        if (loadingIndicatorElement) loadingIndicatorElement.style.display = 'none';
+    }
+
     // Function to start the game
     async function startGame() {
         currentPlayerName = playerNameInput.value.trim();
+        showLoading();
+        startGameButton.disabled = true;
         if (!currentPlayerName) {
             alert('Please enter your name!');
             return;
@@ -88,9 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
             updateDisplay(gameState);
             playerNameInput.value = ''; // Clear input
             inputSectionElement.style.display = 'none';
+
+            if (gameControlsElement) gameControlsElement.style.display = 'block';
+
         } catch (error) {
             console.error('Error starting game:', error);
             sceneDescriptionElement.textContent = `Error starting game: ${error.message}. Check console.`;
+        } finally {
+            hideLoading();
+            startGameButton.disabled = false;
         }
     }
 
@@ -132,7 +167,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    if (gameControlsElement) gameControlsElement.style.display = 'none';
+
     // Event Listeners
+    exitGameButton.addEventListener('click', () => {
+        if (confirm("Are you sure you want to exit? Your current progress will be lost.")) {
+            currentSessionId = null;
+            gameOverSectionElement.style.display = 'none';
+            inputSectionElement.style.display = 'block';
+            choicesSectionElement.innerHTML = '';
+            choicesSectionElement.style.display = 'block';
+            sceneDescriptionElement.textContent = 'Welcome, adventurer! Enter your name to begin.';
+            playerNameInput.value = '';
+            playerNameDisplay.textContent = '';
+            playerClassDisplay.textContent = '';
+            playerInfoSection.style.display = 'none';
+            if (gameControlsElement) gameControlsElement.style.display = 'none';
+        }
+    });
+
     startGameButton.addEventListener('click', startGame);
     restartGameButton.addEventListener('click', () => {
         // Reset UI for new game
@@ -144,5 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
         playerNameDisplay.textContent = '';
         playerClassDisplay.textContent = '';
         playerInfoSection.style.display = 'none';
+
+        if (gameControlsElement) gameControlsElement.style.display = 'none';
+    });
+
+    playerNameInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            startGameButton.click();
+        }
     });
 });

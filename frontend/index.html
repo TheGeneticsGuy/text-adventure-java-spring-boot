@@ -15,6 +15,7 @@
 
 <body>
     <div class="game-container">
+
         <h1>BYU Student's Mysterious Adventure</h1>
 
         <div id="player-info-section">
@@ -24,6 +25,10 @@
 
         <div id="story-section">
             <p id="sceneDescription">Welcome, adventurer! Enter your name to begin.</p>
+        </div>
+        <div id="attack-effect-container" style="text-align: center; min-height: 30px;">
+            <p id="attack-effect-message" style="color: #ff9900; font-size: 1.5em; font-weight: bold; display: none;">
+            </p>
         </div>
 
         <div id="choices-section">
@@ -38,6 +43,13 @@
             <p id="outcomeMessage"></p>
             <button id="restartGameButton">Play Again?</button>
         </div>
+
+        <div id="loading-indicator" style="display:none; text-align: center; margin-top: 20px;">
+            <p>Waiting for server to load. One moment... <span class="spinner"></span></p>
+        </div>
+
+    </div>
+    <div id="game-controls" style="display:none; margin-top: 15px;"> <button id="exitGameButton">Exit Game</button>
     </div>
 
 </body>

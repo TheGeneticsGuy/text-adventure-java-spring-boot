@@ -29,7 +29,6 @@ record GameStateResponse(
 
 @RestController
 @RequestMapping("/api/game")
-@CrossOrigin(origins = "https://byu-student-java-text-rpg-ui.onrender.com")
 public class GameController {
 
     private final GameService gameService;

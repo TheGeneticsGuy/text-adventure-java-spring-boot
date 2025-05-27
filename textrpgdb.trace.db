@@ -1,0 +1,12 @@
+2025-05-26 17:27:52.419488-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "GAME_OUTCOME_MESSAGE CHARACTER VARYING(255)": "'You step through the portal and find yourself back in your dorm, the mysterious... (287)"; SQL statement:
+update game_session set current_scene_id=?,game_outcome_message=?,game_over=?,player_id=? where id=? [22001-232]
+2025-05-26 17:28:44.880349-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "GAME_OUTCOME_MESSAGE CHARACTER VARYING(255)": "'You step through the portal and find yourself back in your dorm, the mysterious... (287)"; SQL statement:
+update game_session set current_scene_id=?,game_outcome_message=?,game_over=?,player_id=? where id=? [22001-232]
+2025-05-26 17:38:33.774533-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "GAME_OUTCOME_MESSAGE CHARACTER VARYING(255)": "'You step through the portal and find yourself back in your dorm, the mysterious... (287)"; SQL statement:
+update game_session set current_scene_id=?,game_outcome_message=?,game_over=?,player_id=? where id=? [22001-232]
+2025-05-26 17:39:34.397424-07:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "GAME_OUTCOME_MESSAGE CHARACTER VARYING(255)": "'You step through the portal and find yourself back in your dorm, the mysterious... (287)"; SQL statement:
+update game_session set current_scene_id=?,game_outcome_message=?,game_over=?,player_id=? where id=? [22001-232]

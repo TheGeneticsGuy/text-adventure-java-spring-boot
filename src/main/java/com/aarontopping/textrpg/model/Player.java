@@ -17,6 +17,7 @@ public class Player {
 
     private String name;
     private int health;
+    private boolean hasAncientKey = false;
 
     @ManyToOne // Player has only 1 character class
     @JoinColumn(name = "character_class_id")
@@ -36,6 +37,7 @@ public class Player {
         // Default Player Values
         this.name = name;
         this.health = 100;
+        this.hasAncientKey = false;
     }
 
     // I really want to expand this in the future if they reach player milestones

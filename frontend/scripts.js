@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerInfoSection = document.getElementById('player-info-section');
     const exitGameButton = document.getElementById('exitGameButton');
     const gameControlsElement = document.getElementById('game-controls');
+    const attackEffectMessageElement = document.getElementById('attack-effect-message');
 
 
     let API_BASE_URL;
@@ -133,7 +134,39 @@ document.addEventListener('DOMContentLoaded', () => {
     async function makeChoice(choiceId) {
         if (!currentSessionId) {
             console.error('No active game session!');
+            sceneDescriptionElement.textContent = "Session lost or not started. Please start a new game.";
+            inputSectionElement.style.display = 'block';
+            choicesSectionElement.innerHTML = '';
+            if (gameControlsElement) gameControlsElement.style.display = 'none';
+            playerInfoSection.style.display = 'none';
             return;
+        }
+
+        let isAttackAction = false;
+        let attackMessage = "";
+
+        const knownAttackChoiceIdPatterns = ["Punch", "Power_Slash", "Ranged_Arrow"];
+        if (knownAttackChoiceIdPatterns.some(pattern => choiceId.toLowerCase().includes(pattern.toLowerCase()))) {
+            isAttackAction = true;
+            if (choiceId.toLowerCase().includes("punch")) attackMessage = "PUNCH!";
+            else if (choiceId.toLowerCase().includes("slash")) attackMessage = "POWER SLASH!";
+            else if (choiceId.toLowerCase().includes("arrow")) attackMessage = "RANGED ARROW!";
+            else attackMessage = "ATTACK!";
+        }
+
+        document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+        choicesSectionElement.innerHTML = '';
+
+        if (isAttackAction && attackEffectMessageElement) {
+            attackEffectMessageElement.textContent = attackMessage;
+            attackEffectMessageElement.style.display = 'block';
+
+            // Wait a short moment for the player to see the attack message
+            await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5-second delay
+
+            // Hide the attack message after the delay, before fetching next state
+            attackEffectMessageElement.style.display = 'none';
+            attackEffectMessageElement.textContent = '';
         }
 
         try {
@@ -145,25 +178,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ choiceId: choiceId }),
             });
 
-            // EXPANDED error response as I couldn't seem to figure out why it was
-            // failing every time I selected a weapon in the list. Source it easier
+            let responseBodyText = await response.text();
+
             if (!response.ok) {
-                let errorMessage = `HTTP error! status: ${response.status}`;
+                let errorMessage = `HTTP error! Status: ${response.status}`;
                 try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorData.message || errorMessage;
+                    const errorData = JSON.parse(responseBodyText);
+                    errorMessage = errorData.error || errorData.message || (errorData.detail || `Server error: ${response.status}`);
                 } catch (e) {
-                    const errorText = await response.text();
-                    errorMessage = errorText || errorMessage;
+
+                    if (responseBodyText && responseBodyText.trim() !== "") {
+                        errorMessage = responseBodyText;
+                    }
                 }
+                console.error("Full error response object from makeChoice API:", response);
                 throw new Error(errorMessage);
             }
 
-            const gameState = await response.json();
+            const gameState = JSON.parse(responseBodyText);
             updateDisplay(gameState);
+
         } catch (error) {
-            console.error('Error making choice:', error);
-            sceneDescriptionElement.textContent = `Error: ${error.message}. Check console.`;
+            console.error('Error in makeChoice JS function:', error);
+            sceneDescriptionElement.textContent = `Error processing your choice: ${error.message}. Please try refreshing or starting a new game if the issue persists.`;
+        } finally {
+            hideLoading();
+            // Buttons are re-created by updateDisplay
         }
     }
 

@@ -1,12 +1,16 @@
 # Text Adventure as a Web App
 
+[CLICK HERE to Experience the Online Text Adventure RPG Yourself!](https://byu-student-java-text-rpg-ui.onrender.com/)
+
 This project represents an exploration into building a backend-driven web application using enterprise-grade Java technologies. While this is a fun and simple "game," the primary goal was to develop a robust RESTful API capable of delivering a text-based Role-Playing Game (RPG), all written with Java as the backend. This is almost unusual, given other more common tools, but I just thought it was be a fun proof-of-concept given that so much work is done in Java in the professional world.
 
 The software is a "backend-driven" RPG system as a text-based RPG. Players interact with the game world through API calls, allowing for character creation, story progression, exploration, and even combat. While it is fairly limited in its current form, the infrastructure is in place to now take the program really to the next level. The narrative is a multi-branching storyline about a BYU student.
 
-[CLICK HERE to Experience the Online Text Adventure RPG Yourself!](https://byu-student-java-text-rpg-ui.onrender.com/)
+
 
 (Please be aware, Render can take up to 50 seconds to spin up after hitting the "Start Game" button - Please be patient)
+
+![Home Page](https://i.imgur.com/b6SuuNi.jpeg)
 
 [Software Demo Video](https://youtu.be/cjd-2J_Zaag)
 

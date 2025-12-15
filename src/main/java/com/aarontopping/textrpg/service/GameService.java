@@ -108,7 +108,7 @@ public class GameService {
         storyScenes.clear();
 
         Scene start = new Scene(START_SCENE_ID,
-                "You are a BYU student at the University of Idaho. Late one night, while working in the archives of the Computer Science department, you stumble upon some very old PC hardware. You find a computer unlike anything you have ever seen before. It looks old and modern at the same time. It feels warm to the touch, which is odd given it probably hasn't been plugged in for decades. Curious, you bring it back to your dorm and decide to plug it in and load it up. After a short moment, text appears in the middle of the screen with a cryptic link: 'Discover What Lies Beyond'.");
+                "You are a graduate student at a prestigious university. Late one night, while working in the archives of the Computer Science department, you stumble upon some very old PC hardware. You find a computer unlike anything you have ever seen before. It looks old and modern at the same time. It feels warm to the touch, which is odd given it probably hasn't been plugged in for decades. Curious, you bring it back to your dorm and decide to plug it in and load it up. After a short moment, text appears in the middle of the screen with a cryptic link: 'Discover What Lies Beyond'.");
         start.addChoice(new Choice("1", "Investigate the link.", CLICK_LINK_CHOICE_SCENE_ID, null, false));
         start.addChoice(new Choice("2", "Ignore it and get back to work. You're tired anyway...", END_COLLEGE_LIFE_ID,
                 null, false));

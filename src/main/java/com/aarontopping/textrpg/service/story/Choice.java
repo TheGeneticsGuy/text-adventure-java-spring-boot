@@ -8,9 +8,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Choice {
-    private String id; // "1", "ATTACK_WITH_POWER_SLASH"
-    private String text; // "Use Power Slash"
-    private String nextSceneId; // Scene after this choice
-    private String skillName; // Name of skill choice uses
-    private boolean requiresPlayerAction = false; // True if this choice is a game mechanic like "attack"
+    private String id;
+    private String text;
+    private String nextSceneId;
+    private String skillName;   // Optional: null for story choices
+    private boolean requiresPlayerAction = false;
+
+    // This allows us to create simple story choices
+    public Choice(String id, String text, String nextSceneId) {
+        this.id = id;
+        this.text = text;
+        this.nextSceneId = nextSceneId;
+        this.skillName = null;
+        this.requiresPlayerAction = false;
+    }
 }

@@ -31,22 +31,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     playerInfoSection.style.display = 'none'; // Hiding player info initially
 
-    // Function to update the game display on each selection like a SPA
+    // Function to update the game display on each selection (SPA feature)
     function updateDisplay(gameState) {
-
         choicesSectionElement.innerHTML = '';
         const storySectionElement = document.getElementById('story-section');
+        const sceneImageElement = document.getElementById('sceneImage');
+        const sceneImageContainer = document.getElementById('scene-image-container');
+
+        // Stats Elements
+        const statRigging = document.getElementById('statRigging');
+        const statLogic = document.getElementById('statLogic');
+        const statNerve = document.getElementById('statNerve');
 
         if (gameState.gameOver) {
             if (gameControlsElement) gameControlsElement.style.display = 'none';
-
             sceneDescriptionElement.textContent = '';
             storySectionElement.style.display = 'none';
+            if (sceneImageContainer) sceneImageContainer.style.display = 'none'; // Hide image on game over
 
             inputSectionElement.style.display = 'none';
             choicesSectionElement.style.display = 'none';
 
-            // Only use outcomeMessage for the game over section
             outcomeMessageElement.textContent = gameState.outcomeMessage;
 
             gameOverSectionElement.style.display = 'block';
@@ -54,9 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (gameControlsElement) gameControlsElement.style.display = 'block';
 
-            storySectionElement.style.display = 'block'; // Show the main story section
-            sceneDescriptionElement.textContent = gameState.description;
+            if (gameState.imageUrl) {
+                sceneImageElement.src = gameState.imageUrl;
+                sceneImageContainer.style.display = 'block';
+            } else {
+                sceneImageContainer.style.display = 'none';
+            }
 
+            storySectionElement.style.display = 'block';
+            sceneDescriptionElement.innerText = gameState.description;
+
+            // Handle Choices
             gameState.choices.forEach(choice => {
                 const button = document.createElement('button');
                 button.setAttribute('type', 'button');
@@ -71,9 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
             gameOverSectionElement.style.display = 'none';
             inputSectionElement.style.display = 'none';
 
+            // Handle Stats
             if (gameState.playerName) {
                 playerNameDisplay.textContent = gameState.playerName;
-                playerClassDisplay.textContent = gameState.playerClass || 'Undetermined';
+                // Update new stats
+                if(statRigging) statRigging.textContent = gameState.rigging;
+                if(statLogic) statLogic.textContent = gameState.logic;
+                if(statNerve) statNerve.textContent = gameState.nerve;
+
                 playerInfoSection.style.display = 'block';
             }
         }

@@ -5,6 +5,8 @@ import com.aarontopping.textrpg.repository.*;
 import com.aarontopping.textrpg.service.story.Choice;
 import com.aarontopping.textrpg.service.story.Scene;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,424 +18,224 @@ public class GameService {
 
     private final PlayerRepository playerRepository;
     private final GameSessionRepository gameSessionRepository;
-    private final SkillRepository skillRepository;
-    private final CharacterClassRepository characterClassRepository;
-    private final WeaponTemplateRepository weaponTemplateRepository;
-
     private final Map<String, Scene> storyScenes = new HashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(GameService.class);
 
-    // Skills
-    private Skill SKILL_PUNCH;
-    private Skill SKILL_POWER_STRIKE;
-    private Skill SKILL_AIMED_SHOT;
-
-    // Character Classes
-    private CharacterClass CLASS_WARRIOR;
-    private CharacterClass CLASS_ARCHER;
-
-    // Weapon Templates
-    private WeaponTemplate WEAPON_SWORD_TEMPLATE;
-    private WeaponTemplate WEAPON_BOW_TEMPLATE;
-
-    // Scene IDs
-    public static final String START_SCENE_ID = "START";
-    public static final String CLICK_LINK_CHOICE_SCENE_ID = "CLICK_LINK_CHOICE";
-    public static final String TELEPORT_SCENE_ID = "TELEPORT_SCENE";
-
-    // player choice
-    public static final String CHOOSE_WARRIOR_CLASS_ID = "CHOOSE_WARRIOR_CLASS";
-    public static final String CHOOSE_ARCHER_CLASS_ID = "CHOOSE_ARCHER_CLASS";
-    public static final String FOREST_ENCOUNTER_ID = "FOREST_ENCOUNTER"; // Initial battle scene
-    public static final String FOREST_ENCOUNTER_PUNCHED_ONCE_ID = "FOREST_ENCOUNTER_PUNCHED_ONCE";
-    public static final String FOREST_ENCOUNTER_PLAYER_DEFEATED_ID = "FOREST_ENCOUNTER_PLAYER_DEFEATED";
-    public static final String FOREST_ENCOUNTER_GNURR_DEFEATED_ID = "FOREST_ENCOUNTER_GNURR_DEFEATED";
-    public static final String FOREST_ENCOUNTER_FLED_ID = "FOREST_ENCOUNTER_FLED";
-    public static final String FIND_PORTAL_HOME_ID = "FIND_PORTAL_HOME";
-    public static final String END_COLLEGE_LIFE_ID = "END_COLLEGE_LIFE";
-    public static final String ANOTHER_ADVENTURE_ID = "ANOTHER_ADVENTURE";
-    public static final String GAME_OVER_RETURNED_ID = "GAME_OVER_RETURNED";
-
-    // Key Selection or not Scene
-    public static final String KEY_TAKEN_SCENE_ID = "KEY_TAKEN_SCENE";
-    public static final String KEY_LEFT_SCENE_ID = "KEY_LEFT_SCENE";
+    // --- SCENE CONSTANTS ---
+    public static final String SCENE_LOGIN_TERMINAL = "LOGIN_TERMINAL";
+    public static final String SCENE_LAB_HUB = "LAB_HUB";
+    public static final String SCENE_INSPECT_COILS = "INSPECT_COILS";
+    public static final String SCENE_COILS_ALIGNED = "COILS_ALIGNED";
+    public static final String SCENE_CHECK_PC = "CHECK_PC";
+    public static final String SCENE_READ_JOURNAL = "READ_JOURNAL";
+    public static final String SCENE_FLASHBACK = "FLASHBACK"; // The video/image trigger
+    public static final String SCENE_ENTITY_APPEARS = "ENTITY_APPEARS";
+    public static final String SCENE_ENTITY_DEATH = "ENTITY_DEATH"; // Game Over
+    public static final String SCENE_ACTIVATE_PORTAL = "ACTIVATE_PORTAL";
+    public static final String SCENE_JUMP_PORTAL = "JUMP_PORTAL"; // Chapter 1 End
 
     @Autowired
-    public GameService(PlayerRepository playerRepository, GameSessionRepository gameSessionRepository,
-            SkillRepository skillRepository, CharacterClassRepository characterClassRepository,
-            WeaponTemplateRepository weaponTemplateRepository) {
+    public GameService(PlayerRepository playerRepository, GameSessionRepository gameSessionRepository) {
         this.playerRepository = playerRepository;
         this.gameSessionRepository = gameSessionRepository;
-        this.skillRepository = skillRepository;
-        this.characterClassRepository = characterClassRepository;
-        this.weaponTemplateRepository = weaponTemplateRepository;
     }
 
     @PostConstruct
-    @Transactional
-    public void initializeGameData() {
-        final Skill punchSkill = skillRepository.findByName("Punch")
-                .orElseGet(() -> skillRepository.save(new Skill("Punch", "A basic hand-to-hand attack.", 5)));
-        final Skill powerStrikeSkill = skillRepository.findByName("Power Slash")
-                .orElseGet(() -> skillRepository.save(new Skill("Power Slash", "A strong melee attack.", 15)));
-        final Skill aimedShotSkill = skillRepository.findByName("Ranged Arrow")
-                .orElseGet(() -> skillRepository.save(new Skill("Ranged Arrow", "A precise ranged attack.", 15)));
-
-        this.SKILL_PUNCH = punchSkill;
-        this.SKILL_POWER_STRIKE = powerStrikeSkill;
-        this.SKILL_AIMED_SHOT = aimedShotSkill;
-
-        CLASS_WARRIOR = characterClassRepository.findByClassName("Warrior")
-                .orElseGet(() -> {
-                    Warrior warrior = new Warrior();
-                    warrior.addDefaultSkill(this.SKILL_POWER_STRIKE);
-                    return characterClassRepository.save(warrior);
-                });
-
-        CLASS_ARCHER = characterClassRepository.findByClassName("Archer")
-                .orElseGet(() -> {
-                    Archer archer = new Archer();
-                    archer.addDefaultSkill(this.SKILL_AIMED_SHOT);
-                    return characterClassRepository.save(archer);
-                });
-
-        WEAPON_SWORD_TEMPLATE = weaponTemplateRepository.findByName("Basic Sword") // Use renamed field
-                .orElseGet(() -> weaponTemplateRepository.save(new WeaponTemplate("Basic Sword", "SWORD", 3)));
-        WEAPON_BOW_TEMPLATE = weaponTemplateRepository.findByName("Basic Bow") // Use renamed field
-                .orElseGet(() -> weaponTemplateRepository.save(new WeaponTemplate("Basic Bow", "BOW", 3)));
-
-        initializeStory();
-    }
-
-    private void initializeStory() {
+    public void initializeStory() {
         storyScenes.clear();
 
-        Scene start = new Scene(START_SCENE_ID,
-                "You are a graduate student at a prestigious university. Late one night, while working in the archives of the Computer Science department, you stumble upon some very old PC hardware. You find a computer unlike anything you have ever seen before. It looks old and modern at the same time. It feels warm to the touch, which is odd given it probably hasn't been plugged in for decades. Curious, you bring it back to your dorm and decide to plug it in and load it up. After a short moment, text appears in the middle of the screen with a cryptic link: 'Discover What Lies Beyond'.");
-        start.addChoice(new Choice("1", "Investigate the link.", CLICK_LINK_CHOICE_SCENE_ID, null, false));
-        start.addChoice(new Choice("2", "Ignore it and get back to work. You're tired anyway...", END_COLLEGE_LIFE_ID,
-                null, false));
-        storyScenes.put(START_SCENE_ID, start);
+        // 1. The Hook: The Terminal Boot
+        Scene login = new Scene(SCENE_LOGIN_TERMINAL,
+            "OS v9.4.2 BOOT SEQUENCE INITIATED...\n\n" +
+            "Loading Kernel... OK.\n" +
+            "Mounting Volume: 'Bell-Resonance'... OK.\n" +
+            "User Detected via Biometrics.\n\n" +
+            "Welcome to Lab 4. The hum of the cooling fans is the only sound. The air smells of ozone and stale coffee. " +
+            "The Quantum-Cymatic Array sits silent in the center of the room.",
+            "https://placehold.co/600x400/000000/00FF00?text=TERMINAL+BOOT" // Placeholder Image
+        );
+        login.addChoice(new Choice("START_WORK", "Initialize Lab Protocol", SCENE_LAB_HUB));
+        storyScenes.put(SCENE_LOGIN_TERMINAL, login);
 
-        Scene clickLinkChoice = new Scene(CLICK_LINK_CHOICE_SCENE_ID,
-                "Your Curiosity Draws you near. Your cursor hovers over the link. Should you do it?");
-        clickLinkChoice.addChoice(new Choice("1", "Click the link!", TELEPORT_SCENE_ID, null, false));
-        clickLinkChoice.addChoice(new Choice("2", "Nevermind, this is too weird. Close and get back to work.",
-                END_COLLEGE_LIFE_ID, null, false));
-        storyScenes.put(CLICK_LINK_CHOICE_SCENE_ID, clickLinkChoice);
+        // 2. The Hub
+        Scene labHub = new Scene(SCENE_LAB_HUB,
+            "You stand before the Array. Copper coils loom over a central platform. " +
+            "To your left is the Control PC. On a cluttered desk lies a dust-covered Journal. " +
+            "The protocol requires the coils to be aligned and the system booted before engagement.");
+        // Choices generated dynamically based on flags
+        storyScenes.put(SCENE_LAB_HUB, labHub);
 
-        Scene endCollege = new Scene(END_COLLEGE_LIFE_ID,
-                "You decide against it. College life continues. The mystery fades away forever. GAME OVER.", true);
-        storyScenes.put(END_COLLEGE_LIFE_ID, endCollege);
+        // 3. The Puzzles
+        Scene inspectCoils = new Scene(SCENE_INSPECT_COILS,
+            "You examine Emitter A. It's misaligned by 15 degrees. The geometry must be perfect to create the standing wave. " +
+            "You grab the heavy wrench.");
+        inspectCoils.addChoice(new Choice("ALIGN_COILS", "Rotate Coil A (Requires Rigging)", SCENE_COILS_ALIGNED));
+        inspectCoils.addChoice(new Choice("BACK", "Step away", SCENE_LAB_HUB));
+        storyScenes.put(SCENE_INSPECT_COILS, inspectCoils);
 
-        Scene teleport = new Scene(TELEPORT_SCENE_ID,
-                "A blinding flash occurs! You feel your body lift from the ground. You feel weightless. In an instant, you land in a dim forest. Where did you go? Are you dreaming!? The air is strange. Before you, on a mossy stone, lie two items: a sturdy-looking sword and a well-crafted bow.");
-        teleport.addChoice(new Choice("SWORD", "Take the Sword.", null, null, false)); // Next scene determined in
-                                                                                       // processChoice
-        teleport.addChoice(new Choice("BOW", "Take the Bow.", null, null, false)); // Next scene determined in
-                                                                                   // processChoice
-        storyScenes.put(TELEPORT_SCENE_ID, teleport);
+        Scene coilsAligned = new Scene(SCENE_COILS_ALIGNED,
+            "With a groan of metal, the coil locks into place. You feel a subtle vibration in your teeth. " +
+            "The pitch of the background hum shifts. It's working.");
+        coilsAligned.addChoice(new Choice("BACK", "Return to console", SCENE_LAB_HUB));
+        storyScenes.put(SCENE_COILS_ALIGNED, coilsAligned);
 
-        Scene warriorChosen = new Scene(CHOOSE_WARRIOR_CLASS_ID,
-                "The cold steel of the sword feels strangely familiar in your grasp. It's heavier than you expected, yet balanced. A surge of forgotten strength, of primal instincts, flows through you. In this world, the analytical mind of a coder gives way to something older, something fiercer. Perhaps in another age, your destiny would not have been lines of code, but standing in lines on a battlefield. You are a Warrior. You feel a new sense of purpose... and hear a rustling in the bushes nearby.");
-        warriorChosen.addChoice(new Choice("CONTINUE", "Acknowledge your new path and investigate the rustling.",
-                FOREST_ENCOUNTER_ID, null, false));
-        storyScenes.put(CHOOSE_WARRIOR_CLASS_ID, warriorChosen);
+        // 4. The Horror Reveal
+        Scene readJournal = new Scene(SCENE_READ_JOURNAL,
+            "October 14th. The theory holds. The resonance is stable at 432Hz. But the silence inside the portal... " +
+            "it isn't empty. I looked into the waveform. I heard something calling back. It sounds like her. " +
+            "I turned it off immediately. I am afraid I wasn't fast enough. Something got through. It's in the corner.");
+        readJournal.addChoice(new Choice("TOUCH_STAIN", "Touch the dark stain on the page", SCENE_FLASHBACK));
+        readJournal.addChoice(new Choice("BACK", "Close the book", SCENE_LAB_HUB));
+        storyScenes.put(SCENE_READ_JOURNAL, readJournal);
 
-        Scene archerChosen = new Scene(CHOOSE_ARCHER_CLASS_ID,
-                "The polished wood of the bow hums faintly as you pick it up, the string taut and ready. Your fingers instinctively find their place. A sense of keen focus, of distant targets and trajectories, sharpens your mind. The digital precision you honed in computer science translates into an uncanny aim. Maybe the path of logic and algorithms you walked in your old life was but a reflection of this archer's instinct, now awakened. You are an Archer. You feel a new sense of purpose... and hear a rustling in the bushes nearby.");
-        archerChosen.addChoice(new Choice("CONTINUE", "Embrace your newfound skill and investigate the rustling.",
-                FOREST_ENCOUNTER_ID, null, false));
-        storyScenes.put(CHOOSE_ARCHER_CLASS_ID, archerChosen);
+        Scene flashback = new Scene(SCENE_FLASHBACK,
+            "[VIDEO LOG PLAYBACK START]\n\n" +
+            "The camera shakes. Dr. Vane is panning to the corner. 'It's not rendering correctly!' he screams. " +
+            "In the corner of the room, reality is pixelating. A shape made of wireframe darkness lunges at the lens.\n\n" +
+            "[PLAYBACK END]",
+            "https://placehold.co/600x400/111111/FF0000?text=CORRUPTED+DATA" // Visual Payoff
+        );
+        flashback.addChoice(new Choice("BACK", "Gasps and step back", SCENE_LAB_HUB));
+        storyScenes.put(SCENE_FLASHBACK, flashback);
 
-        Scene forestEncounter = new Scene(FOREST_ENCOUNTER_ID,
-                "A shadowy creature unlike anything you have ever seen emerges! A slimy, towering creature at least 8 feet tall stands before you... fixated on you. It doesn't look friendly. Its teeth are razor sharp, its lips curling. It looks hostile. What do you do?");
-        forestEncounter.setBattleScene(true);
-        storyScenes.put(FOREST_ENCOUNTER_ID, forestEncounter);
+        // 5. The Entity
+        Scene entityAppears = new Scene(SCENE_ENTITY_APPEARS,
+            "You finish the sequence. The PC reads: READY TO ENGAGE.\n\n" +
+            "Suddenly, the light in the hallway flickers and dies. The temperature drops 20 degrees. " +
+            "A high-pitched screeching noise tears through the air. In the corner... the darkness is expanding. " +
+            "It deletes the filing cabinet. It's not moving; it's overwriting reality.",
+            "https://placehold.co/600x400/000000/333333?text=THE+VOID"
+        );
+        entityAppears.addChoice(new Choice("FIGHT", "Throw the wrench at it", SCENE_ENTITY_DEATH));
+        entityAppears.addChoice(new Choice("ACTIVATE", "INITIATE SEQUENCE (Run to terminal)", SCENE_ACTIVATE_PORTAL));
+        storyScenes.put(SCENE_ENTITY_APPEARS, entityAppears);
 
-        Scene forestEncounterPunchedOnce = new Scene(FOREST_ENCOUNTER_PUNCHED_ONCE_ID,
-                "That probably wasn't the best idea. Your fist is now covered in a strange, sticky slime. The Grumbling Creature recoils for a moment, then lets out an enraged gurgle, its many eyes focusing on you with malice. It looms closer, angrier.");
-        forestEncounterPunchedOnce.setBattleScene(true);
-        storyScenes.put(FOREST_ENCOUNTER_PUNCHED_ONCE_ID, forestEncounterPunchedOnce);
+        Scene entityDeath = new Scene(SCENE_ENTITY_DEATH,
+            "You throw the wrench. It enters the Void and vanishes instantly. No sound. No impact. " +
+            "The entity creates a wireframe appendage and swipes. Your vision turns into static. You have been deleted. GAME OVER.",
+            true
+        );
+        storyScenes.put(SCENE_ENTITY_DEATH, entityDeath);
 
-        Scene playerDefeated = new Scene(FOREST_ENCOUNTER_PLAYER_DEFEATED_ID,
-                "Before you can react to its fury, the Creature lunges with surprising speed. Its attack is overwhelming. Why didn't you use your weapon, you think to yourself as the darkness closes in... Your adventure ends here. GAME OVER.",
-                true);
-        storyScenes.put(FOREST_ENCOUNTER_PLAYER_DEFEATED_ID, playerDefeated);
+        Scene activatePortal = new Scene(SCENE_ACTIVATE_PORTAL,
+            "You scramble to the terminal. You slam the Enter key. " +
+            "The coils scream. The room shakes violently. In the center of the room, the air splits open. " +
+            "It's not a hole, but a shimmering wall of distorted light. The Entity screams—a garbled, digital noise—and lunges."
+        );
+        activatePortal.addChoice(new Choice("JUMP", "JUMP INTO THE PORTAL", SCENE_JUMP_PORTAL));
+        storyScenes.put(SCENE_ACTIVATE_PORTAL, activatePortal);
 
-        Scene gnurrDefeated = new Scene(FOREST_ENCOUNTER_GNURR_DEFEATED_ID,
-                "With a final, wretched shriek, the towering creature shudders and dissolves into a pile of shimmering dust! Where the creature stood, a small, intricately carved iron key now rests on the forest floor. It looks ancient and important.");
-        gnurrDefeated.addChoice(new Choice("TAKE_KEY", "Take the ancient iron key.", null, null, false));
-        gnurrDefeated.addChoice(
-                new Choice("LEAVE_KEY", "Leave the key. It's probably cursed.", null, null, false));
-        storyScenes.put(FOREST_ENCOUNTER_GNURR_DEFEATED_ID, gnurrDefeated);
-
-        Scene keyTaken = new Scene(KEY_TAKEN_SCENE_ID,
-                "You reach down and pick up the iron key. It's surprisingly heavy, the metal cool and smooth against your palm, its intricate carvings worn with an unknowable age. A faint thrum of energy seems to emanate from it. You carefully tuck it into your pocket, a strange souvenir from this bizarre world. The path ahead is dimly lit.");
-        keyTaken.addChoice(
-                new Choice("CONTINUE_PATH", "Continue down the dimly lit path.", FIND_PORTAL_HOME_ID, null, false));
-        storyScenes.put(KEY_TAKEN_SCENE_ID, keyTaken);
-
-        Scene keyLeft = new Scene(KEY_LEFT_SCENE_ID,
-                "A shiver runs down your spine. Touching something that was so close to that... creature... feels wrong. This world is alien, its rules unknown. Some mysteries are best left undisturbed. You turn away from the key, leaving it glinting on the forest floor. The path ahead is dimly lit.");
-        keyLeft.addChoice(
-                new Choice("CONTINUE_PATH", "Continue down the dimly lit path.", FIND_PORTAL_HOME_ID, null, false));
-        storyScenes.put(KEY_LEFT_SCENE_ID, keyLeft);
-
-        Scene forestFled = new Scene(FOREST_ENCOUNTER_FLED_ID,
-                "Not chancing it, you turn and sprint as fast as your legs can carry you, deeper into the shadowed woods. Your heart pounds against your ribs, branches whip at your face, but you don't look back. Gradually, the monstrous sounds of the towering Creature fade behind you. You slow down, gasping for breath, seemingly safe... for now.");
-        forestFled.addChoice(new Choice("CONTINUE_EXPLORING", "Catch your breath and continue exploring.",
-                FIND_PORTAL_HOME_ID, null, false));
-        storyScenes.put(FOREST_ENCOUNTER_FLED_ID, forestFled);
-
-        Scene findPortal = new Scene(FIND_PORTAL_HOME_ID,
-                "As you travel down the dimly lit path, a clearing appears. There is a path to your left, to your right, and right ahead of you is some kind of shimmering portal. It feels familiar... This must be the way back!");
-        findPortal.addChoice(
-                new Choice("1", "Step through the portal to return home.", GAME_OVER_RETURNED_ID, null, false));
-        findPortal.addChoice(
-                new Choice("2", "Stay and explore this new world further.", ANOTHER_ADVENTURE_ID, null, false));
-        storyScenes.put(FIND_PORTAL_HOME_ID, findPortal);
-
-        Scene gameOverReturned = new Scene(GAME_OVER_RETURNED_ID,
-                "You're back in the Computer Science building. The website on the monitor states '404 Not Found'. Was it all a dream? GAME OVER.",
-                true);
-        storyScenes.put(GAME_OVER_RETURNED_ID, gameOverReturned);
-
-        Scene anotherAdventure = new Scene(ANOTHER_ADVENTURE_ID,
-                "This world is too fascinating. Another adventure begins! (Further story TBA!!). GAME OVER.", true);
-        storyScenes.put(ANOTHER_ADVENTURE_ID, anotherAdventure);
+        Scene jumpPortal = new Scene(SCENE_JUMP_PORTAL,
+            "You dive. As you pass the threshold, you look back. The Entity stops. It watches you go. " +
+            "Did it... smile?\n\n" +
+            "Everything goes white. You are falling through a tunnel of light and sound. " +
+            "To be continued in Chapter 2...",
+            "https://placehold.co/600x400/FFFFFF/000000?text=CHAPTER+2"
+        );
+        jumpPortal.setEndingScene(true);
+        storyScenes.put(SCENE_JUMP_PORTAL, jumpPortal);
     }
 
     @Transactional
     public GameSession startGame(String playerName) {
         Optional<Player> existingPlayerOpt = playerRepository.findByName(playerName);
-        Player playerEntity;
+        Player player;
 
         if (existingPlayerOpt.isPresent()) {
-            playerEntity = existingPlayerOpt.get();
-
-            List<GameSession> oldSessions = gameSessionRepository.findAllByPlayerId(playerEntity.getId());
-            if (!oldSessions.isEmpty()) {
-                gameSessionRepository.deleteAllInBatch(oldSessions); // More efficient for multiple deletions
-                gameSessionRepository.flush();
-            }
-
-            playerEntity.setCharacterClass(null);
-            playerEntity.setEquippedWeapon(null);
-            playerEntity.setHasAncientKey(false); // Reset key status
-            playerEntity.setHealth(100);
-
-            List<Skill> newSkillList = new ArrayList<>();
-            if (this.SKILL_PUNCH != null) {
-                newSkillList.add(this.SKILL_PUNCH);
-            }
-            playerEntity.setKnownSkills(newSkillList); // Set to new list, effectively clearing old player-specific
-                                                       // skills
-
-            playerEntity = playerRepository.saveAndFlush(playerEntity); // Save and flush the reset state
+            player = existingPlayerOpt.get();
+            // Reset Flags
+            player.setCoilsAligned(false);
+            player.setCoolingSystemFixed(false);
+            player.setJournalRead(false);
+            player.setNerve(100);
+            player = playerRepository.save(player);
         } else {
-            Player newPlayer = new Player(playerName); // Constructor sets hasAncientKey to false
-            if (this.SKILL_PUNCH != null) {
-                newPlayer.addSkill(this.SKILL_PUNCH);
-            }
-            playerEntity = playerRepository.saveAndFlush(newPlayer);
+            player = new Player(playerName);
+            player = playerRepository.save(player);
         }
 
-        GameSession newGameSession = new GameSession(playerEntity, START_SCENE_ID);
-        GameSession savedNewGameSession = gameSessionRepository.saveAndFlush(newGameSession);
-        return savedNewGameSession;
+        GameSession session = new GameSession(player, SCENE_LOGIN_TERMINAL);
+        return gameSessionRepository.save(session);
     }
 
     @Transactional
     public GameSession processChoice(Long sessionId, String choiceId) {
         GameSession session = gameSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Game session not found: " + sessionId));
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         Player player = session.getPlayer();
-
-        if (session.isGameOver()) {
-            throw new IllegalStateException("Game is already over.");
-        }
-
-        Scene currentScene = storyScenes.get(session.getCurrentSceneId());
-        if (currentScene == null) {
-            throw new IllegalStateException("Unknown scene ID: " + session.getCurrentSceneId());
-        }
-
-        String nextSceneId = null;
-        session.setGameOutcomeMessage(null); // Clear previous transient outcome messages
-
         String currentSceneId = session.getCurrentSceneId();
+        String nextSceneId = null;
 
-        if (currentSceneId.equals(TELEPORT_SCENE_ID)) {
-            WeaponTemplate weaponToEquip = null;
-            CharacterClass classToAssign = null;
+        // --- Logic for Dynamic State Changes ---
 
-            if (choiceId.equals("SWORD")) {
-                weaponToEquip = weaponTemplateRepository.findByName("Basic Sword")
-                        .orElseThrow(() -> new IllegalStateException("Basic Sword template not found!"));
-                classToAssign = characterClassRepository.findByClassName("Warrior")
-                        .orElseThrow(() -> new IllegalStateException("Warrior class template not found!"));
-                nextSceneId = CHOOSE_WARRIOR_CLASS_ID;
-            } else if (choiceId.equals("BOW")) {
-                weaponToEquip = weaponTemplateRepository.findByName("Basic Bow")
-                        .orElseThrow(() -> new IllegalStateException("Basic Bow template not found!"));
-                classToAssign = characterClassRepository.findByClassName("Archer")
-                        .orElseThrow(() -> new IllegalStateException("Archer class template not found!"));
-                nextSceneId = CHOOSE_ARCHER_CLASS_ID;
-            } else {
-                throw new IllegalArgumentException("Invalid weapon choice: " + choiceId);
+        if (currentSceneId.equals(SCENE_INSPECT_COILS) && choiceId.equals("ALIGN_COILS")) {
+            player.setCoilsAligned(true);
+            player.setRigging(player.getRigging() + 1); // Stat increase
+            playerRepository.save(player);
+            nextSceneId = SCENE_COILS_ALIGNED;
+        }
+        else if (currentSceneId.equals(SCENE_READ_JOURNAL) && choiceId.equals("TOUCH_STAIN")) {
+            player.setJournalRead(true);
+            player.setNerve(player.getNerve() - 10); // Sanity damage
+            playerRepository.save(player);
+            nextSceneId = SCENE_FLASHBACK;
+        }
+        else if (currentSceneId.equals(SCENE_LAB_HUB)) {
+            // Check if player has done everything to trigger the horror
+            if (player.isCoilsAligned() && player.isJournalRead()) {
+                // If they try to do anything else, trigger the entity
+                nextSceneId = SCENE_ENTITY_APPEARS;
             }
+        }
 
-            player.setCharacterClass(classToAssign);
-            if (classToAssign != null) { // Should always be non-null
-                player.addSkills(classToAssign.getDefaultSkills());
-            }
-            player.setEquippedWeapon(weaponToEquip);
-            playerRepository.saveAndFlush(player); // Save player changes immediately
-
-        } else if (currentScene.isBattleScene()) {
-            if (choiceId.equals(SKILL_PUNCH.getName().replaceAll("\\s+", "_"))) {
-                if (currentSceneId.equals(FOREST_ENCOUNTER_ID)) {
-                    nextSceneId = FOREST_ENCOUNTER_PUNCHED_ONCE_ID;
-                    session.setGameOutcomeMessage("You punched the Creature. It's slimy and definitely angrier!");
-                } else if (currentSceneId.equals(FOREST_ENCOUNTER_PUNCHED_ONCE_ID)) {
-                    nextSceneId = FOREST_ENCOUNTER_PLAYER_DEFEATED_ID;
-                    // The scene description for FOREST_ENCOUNTER_PLAYER_DEFEATED_ID will be the
-                    // outcome.
-                }
-            } else if (player.getCharacterClass() != null &&
-                    choiceId.equals(player.getCharacterClass().getPrimaryAttackSkillName().replaceAll("\\s+", "_"))) {
-                // Used special attack
-                if (currentSceneId.equals(FOREST_ENCOUNTER_ID)
-                        || currentSceneId.equals(FOREST_ENCOUNTER_PUNCHED_ONCE_ID)) {
-                    nextSceneId = FOREST_ENCOUNTER_GNURR_DEFEATED_ID;
-                    session.setGameOutcomeMessage("Your " + player.getCharacterClass().getPrimaryAttackSkillName()
-                            + " connects! The creature is vanquished!");
-                }
-            } else if (choiceId.equals("FLEE")) {
-                nextSceneId = FOREST_ENCOUNTER_FLED_ID;
-            } else {
-                throw new IllegalArgumentException("Invalid action in battle: " + choiceId);
-            }
-        } else if (currentSceneId.equals(FOREST_ENCOUNTER_GNURR_DEFEATED_ID)) {
-            if (choiceId.equals("TAKE_KEY")) {
-                player.setHasAncientKey(true);
-                session.setGameOutcomeMessage("You pocket the strange iron key.");
-                nextSceneId = KEY_TAKEN_SCENE_ID;
-
-            } else if (choiceId.equals("LEAVE_KEY")) {
-                player.setHasAncientKey(false); // Explicitly set to false
-                session.setGameOutcomeMessage("You decide to leave the mysterious key behind.");
-                nextSceneId = KEY_LEFT_SCENE_ID;
-
-            } else {
-                throw new IllegalArgumentException("Invalid choice for key: " + choiceId);
-            }
-            playerRepository.saveAndFlush(player); // Save player's key status
-
-        } else {
-            // Standard choice processing for non-battle, non-special scenes
-            Choice chosen = currentScene.getChoices().stream()
+        // Fallback to standard choice navigation if logic didn't catch it
+        if (nextSceneId == null) {
+            Scene currentScene = storyScenes.get(currentSceneId);
+            Choice choice = currentScene.getChoices().stream()
                     .filter(c -> c.getId().equals(choiceId))
                     .findFirst()
-                    .orElseThrow(() -> {
-                        return new IllegalArgumentException(
-                                "Invalid choice ID: " + choiceId + " for scene " + currentScene.getId());
-                    });
-            nextSceneId = chosen.getNextSceneId();
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid choice"));
+            nextSceneId = choice.getNextSceneId();
         }
 
-        if (nextSceneId == null) {
-            throw new IllegalStateException("Next scene could not be determined.");
-        }
         session.setCurrentSceneId(nextSceneId);
 
-        Scene nextSceneDetails = storyScenes.get(nextSceneId);
-        if (nextSceneDetails == null) {
-            throw new IllegalStateException("Next scene details not found: " + nextSceneId);
-        }
-
-        if (nextSceneDetails.isEndingScene()) {
+        // Handle Ending
+        Scene nextScene = storyScenes.get(nextSceneId);
+        if (nextScene.isEndingScene()) {
             session.setGameOver(true);
-            String finalMessage = nextSceneDetails.getDescription(); // Default ending message
-            if (nextSceneId.equals(GAME_OVER_RETURNED_ID) && player.isHasAncientKey()) {
-                finalMessage = "You step through the portal and find yourself back in your dorm, the mysterious website now showing a '404 Not Found' error. Was it all a dream? You instinctively reach into your pocket... and feel the cold, hard shape of the ancient iron key. What could this possibly unlock? GAME OVER.";
-            }
-            session.setGameOutcomeMessage(finalMessage);
+            session.setGameOutcomeMessage(nextScene.getDescription());
         }
 
-        return gameSessionRepository.saveAndFlush(session);
+        return gameSessionRepository.save(session);
     }
 
     public Scene getSceneDetails(Long sessionId) {
-        GameSession session = gameSessionRepository.findById(sessionId)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Game session not found for scene details: " + sessionId));
+        GameSession session = gameSessionRepository.findById(sessionId).orElseThrow();
         Player player = session.getPlayer();
-        String currentStorySceneId = session.getCurrentSceneId();
-        Scene originalScene = storyScenes.get(currentStorySceneId);
+        Scene sceneDef = storyScenes.get(session.getCurrentSceneId());
 
-        if (originalScene == null) {
-            throw new IllegalArgumentException("Scene not found in story map: " + currentStorySceneId);
+        // Create a copy to modify choices dynamically
+        Scene displayScene = new Scene(sceneDef.getId(), sceneDef.getDescription(), sceneDef.getImageUrl());
+
+        // Dynamic Choices for HUB
+        if (session.getCurrentSceneId().equals(SCENE_LAB_HUB)) {
+            if (!player.isCoilsAligned()) {
+                displayScene.addChoice(new Choice("INSPECT_COILS", "Inspect Copper Coils", SCENE_INSPECT_COILS));
+            }
+            if (!player.isJournalRead()) {
+                displayScene.addChoice(new Choice("READ_JOURNAL", "Read Dusty Journal", SCENE_READ_JOURNAL));
+            }
+            // Trigger the ending sequence if tasks are done
+            if (player.isCoilsAligned() && player.isJournalRead()) {
+                 displayScene.setDescription("You have aligned the coils and reviewed the warnings. The PC terminal blinks: READY TO ENGAGE.");
+                 displayScene.addChoice(new Choice("ENGAGE", "Engage System", SCENE_ENTITY_APPEARS));
+            }
+        } else {
+            // Standard choices copy
+            displayScene.setChoices(new ArrayList<>(sceneDef.getChoices()));
         }
 
-        // Create a new Scene object for display to avoid modifying the original in the
-        // map
-        Scene sceneForDisplay = new Scene(originalScene.getId(), originalScene.getDescription());
-        sceneForDisplay.setBattleScene(originalScene.isBattleScene());
-        sceneForDisplay.setEndingScene(originalScene.isEndingScene());
-
-        if (originalScene.isBattleScene() && player.getCharacterClass() != null && !session.isGameOver()) {
-            // Only add battle choices if the game is not over
-
-            // Add Punch
-            sceneForDisplay.addChoice(new Choice(
-                    SKILL_PUNCH.getName().replaceAll("\\s+", "_"),
-                    "Use " + SKILL_PUNCH.getName(),
-                    null, // Next scene determined by processChoice based on current battle state
-                    SKILL_PUNCH.getName(),
-                    true));
-
-            // Add Special Attack if character class and skill exist
-            CharacterClass charClass = player.getCharacterClass();
-            if (charClass != null) {
-                String specialSkillName = charClass.getPrimaryAttackSkillName();
-                if (specialSkillName != null) {
-                    // Check if player actually knows this skill (they should if it's their primary)
-                    boolean knowsSpecial = player.getKnownSkills().stream()
-                            .anyMatch(s -> s.getName().equals(specialSkillName));
-                    if (knowsSpecial) {
-                        sceneForDisplay.addChoice(new Choice(
-                                specialSkillName.replaceAll("\\s+", "_"),
-                                "Use " + specialSkillName,
-                                null, // Next scene determined by processChoice
-                                specialSkillName,
-                                true));
-                    }
-                }
-            }
-
-            sceneForDisplay.addChoice(new Choice("FLEE", "Try to Flee", null, null, true));
-
-        } else if (!originalScene.isEndingScene()) { // Only add predefined choices if not an ending scene (unless
-                                                     // ending has choices)
-            // For non-battle scenes, or if battle scene has predefined choices (though we
-            // build dynamically now)
-            // Ensure originalScene.getChoices() is not null
-            if (originalScene.getChoices() != null) {
-                sceneForDisplay.setChoices(new ArrayList<>(originalScene.getChoices()));
-            } else {
-                sceneForDisplay.setChoices(new ArrayList<>()); // Ensure choices list is not null
-            }
-        }
-        // If it's an ending scene, it might have no choices, or its predefined choices
-        // are fine (like "Play Again?")
-        // but our current ending scenes don't have choices that lead to further game
-        // play.
-
-        return sceneForDisplay;
-    }
-
-    public Optional<GameSession> getGameSession(Long sessionId) {
-        return gameSessionRepository.findById(sessionId);
+        return displayScene;
     }
 }

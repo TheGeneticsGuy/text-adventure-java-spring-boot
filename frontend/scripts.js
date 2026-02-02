@@ -25,12 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentProtocol = window.location.protocol;
 
     if (currentProtocol === "file:" || currentHostname === "localhost" || currentHostname === "127.0.0.1") {
-        API_BASE_URL = 'http://localhost:8080/api/game';
-        console.log("Running in LOCAL mode.");
-    } else {
-        API_BASE_URL = 'https://adventure.aarontopping.com/api/game';
-        console.log("Running in DEPLOYED mode.");
-    }
+    API_BASE_URL = 'http://localhost:8080/api/game';
+} else {
+    API_BASE_URL = '/api/game';
+}
 
     let currentSessionId = null;
     let currentPlayerName = '';

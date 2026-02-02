@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Configuration
 public class WebConfig {
 
-    @Value("${app.cors.allowed-origins:http://localhost:5500,http://127.0.0.1:5500,https://adventure.aarontopping.com/}")
+    @Value("${app.cors.allowed-origins:http://localhost:5500,http://127.0.0.1:5500,https://adventure.aarontopping.com/,http://192.168.10.130:30009,http://192.168.10.130:30010}")
     private String[] allowedOriginsProperty;
 
     @Bean

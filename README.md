@@ -10,7 +10,11 @@ The software is a "backend-driven" RPG system as a text-based RPG. Players inter
 
 (Please be aware, Render can take up to 50 seconds to spin up after hitting the "Start Game" button - Please be patient)
 
-![Home Page](https://i.imgur.com/b6SuuNi.jpeg)
+**Initialization**
+![Home Page](images\Resonance1.jpg)
+
+**Result**
+![Choices](images\Resonance2.jpg)
 
 [Software Demo Video](https://youtu.be/cjd-2J_Zaag)
 
@@ -24,7 +28,6 @@ This project was primarily developed using **Visual Studio Code (VS Code)** as t
 *   **Spring Web:** For creating RESTful APIs to handle game interactions.
 *   **Spring Data JPA & Hibernate:** For data managing game state, player characters, and other game entities in a relational database.
 *   **Docker & Docker Hub:** For containerizing the Spring Boot backend application, creating a portable and consistent runtime environment, and hosting the image. ALL DEPLOYMENTS SITES REQUIRED DOCKER FOR JAVA!
-*   **Render.com:** As the cloud platform for deploying both the Dockerized Spring Boot backend (as a Web Service) and the static HTML/JS/CSS frontend (as a Static Site).
 *   **Postman:** For testing the REST APIs during development.
 *   **Git & GitHub:** For version control and source code management.
 *   **H2 Database Engine:** Used as an in-memory and file-based database during local development.

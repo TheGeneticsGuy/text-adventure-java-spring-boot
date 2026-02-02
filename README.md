@@ -11,10 +11,10 @@ The software is a "backend-driven" RPG system as a text-based RPG. Players inter
 (Please be aware, Render can take up to 50 seconds to spin up after hitting the "Start Game" button - Please be patient)
 
 **Initialization**
-![Home Page](images\Resonance1.jpg)
+![Home Page](images/Resonance1.jpg)
 
 **Result**
-![Choices](images\Resonance2.jpg)
+![Choices](images/Resonance2.jpg)
 
 [Software Demo Video](https://youtu.be/cjd-2J_Zaag)
 

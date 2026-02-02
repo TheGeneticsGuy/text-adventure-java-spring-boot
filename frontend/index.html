@@ -15,40 +15,48 @@
 
 <body>
     <div class="game-container">
+        <div class="game-header">
+            <h1>The Bell-Resonance Protocol</h1>
+        </div>
 
-        <h1>A Student's Mysterious Adventure</h1>
+        <div id="scene-image-container" style="display:none; margin-bottom: 20px;">
+            <img id="sceneImage" src="" alt="Scene Visual" style="max-width: 100%; border: 1px solid #004400; box-shadow: 0 0 10px #00ff00;">
+        </div>
 
         <div id="player-info-section">
-            <p>Player: <span id="playerName"></span></p>
-            <p>Class: <span id="playerClass"></span></p>
+            <p>Subject: <span id="playerName"></span></p>
+            <div style="display: flex; gap: 15px; font-size: 0.9em; color: #88ff88;">
+                <span>RIG: <span id="statRigging">0</span></span>
+                <span>LOG: <span id="statLogic">0</span></span>
+                <span>NRV: <span id="statNerve">100</span></span>
+            </div>
         </div>
 
         <div id="story-section">
-            <p id="sceneDescription">Welcome, adventurer! Enter your name to begin.</p>
-        </div>
-        <div id="attack-effect-container" style="text-align: center; min-height: 30px;">
-            <p id="attack-effect-message" style="color: #ff9900; font-size: 1.5em; font-weight: bold; display: none;">
-            </p>
+            <p id="sceneDescription">Initializing Terminal...</p>
         </div>
 
         <div id="choices-section">
         </div>
 
         <div id="input-section">
-            <input type="text" id="playerNameInput" placeholder="Enter your name">
-            <button id="startGameButton">Start Game</button>
+            <input type="text" id="playerNameInput" placeholder="Enter Subject Name">
+            <button id="startGameButton">INITIALIZE</button>
         </div>
 
         <div id="game-over-section" style="display:none;">
             <p id="outcomeMessage"></p>
-            <button id="restartGameButton">Play Again?</button>
+            <button id="restartGameButton">REBOOT SYSTEM</button>
         </div>
 
         <div id="loading-indicator" style="display:none; text-align: center; margin-top: 20px;">
-            <p>Waiting for server to load. One moment... <span class="spinner"></span></p>
+            <p>Processing... <span class="spinner"></span></p>
         </div>
-
     </div>
+    <div id="game-controls" style="display:none;">
+        <button id="exitGameButton">Exit Game</button>
+    </div>
+
     <div id="game-controls" style="display:none; margin-top: 15px;"> <button id="exitGameButton">Exit Game</button>
     </div>
 

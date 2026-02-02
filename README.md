@@ -1,10 +1,10 @@
 # Text Adventure as a Web App
 
-[CLICK HERE to Experience the Online Text Adventure RPG Yourself!](https://byu-student-java-text-rpg-ui.onrender.com/)
+[CLICK HERE to Experience Early Build access to the Online Text Adventure RPG Yourself!](https://adventure.aarontopping.com/)
 
 This project represents an exploration into building a backend-driven web application using enterprise-grade Java technologies. While this is a fun and simple "game," the primary goal was to develop a robust RESTful API capable of delivering a text-based Role-Playing Game (RPG), all written with Java as the backend. This is almost unusual, given other more common tools, but I just thought it was be a fun proof-of-concept given that so much work is done in Java in the professional world.
 
-The software is a "backend-driven" RPG system as a text-based RPG. Players interact with the game world through API calls, allowing for character creation, story progression, exploration, and even combat. While it is fairly limited in its current form, the infrastructure is in place to now take the program really to the next level. The narrative is a multi-branching storyline about a BYU student.
+The software is a "backend-driven" RPG system as a text-based RPG. Players interact with the game world through API calls, allowing for character creation, story progression, exploration, and even combat. While it is fairly limited in its current form, the infrastructure is in place to now take the program really to the next level. The narrative is a multi-branching storyline about a University Student Research.
 
 
 
@@ -32,8 +32,6 @@ This project was primarily developed using **Visual Studio Code (VS Code)** as t
 *   **Git & GitHub:** For version control and source code management.
 *   **H2 Database Engine:** Used as an in-memory and file-based database during local development.
 *   **HTML, CSS, Vanilla JavaScript:** For building the simple, text-based frontend to interact with the backend API.
-
-[Public Docker Image](https://hub.docker.com/r/aaronjtopping/byu-student-java-text-rpg)
 
 **Backend Deployment API Example - Postman Query - POST**
 ![POST Query](https://i.imgur.com/QgPl6n8.jpeg)

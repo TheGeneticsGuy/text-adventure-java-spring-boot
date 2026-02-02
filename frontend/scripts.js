@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         API_BASE_URL = 'http://localhost:8080/api/game';
         console.log("Running in LOCAL mode.");
     } else {
-        API_BASE_URL = 'https://byu-student-java-text-rpg.onrender.com/api/game';
+        API_BASE_URL = 'https://adventure.aarontopping.com/api/game';
         console.log("Running in DEPLOYED mode.");
     }
 
